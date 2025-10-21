@@ -13,10 +13,10 @@ public interface CursoService {
     Curso guardar(Curso curso);
     void eliminar(Long id);
     void eliminarCursoUsuarioPorId(Long id);
-    Optional<Curso> porIdConUsuarios(Long id);
+    Optional<Curso> porIdConUsuarios(Long id, String token);
 
-    Optional<Usuario> asignarUsuario(Usuario usuario, Long cursoId);
-    Optional<Usuario> crearUsuario(Usuario usuario, Long cursoId);
-    Optional<Usuario> eliminarUsuario(Usuario usuario, Long cursoId);
+    Optional<Usuario> asignarUsuario(Usuario usuario, Long cursoId, String token);
+    Optional<Usuario> crearUsuario(Usuario usuario, Long cursoId, String token);
+    Optional<Usuario> eliminarUsuario(Usuario usuario, Long cursoId, String token);
 
 }

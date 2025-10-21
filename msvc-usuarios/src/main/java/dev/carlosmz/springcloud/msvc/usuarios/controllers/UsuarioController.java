@@ -12,6 +12,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,9 @@ import jakarta.validation.Valid;
 public class UsuarioController {
 
     @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
     private UsuarioService usuarioService;
 
     @Autowired
@@ -39,7 +43,7 @@ public class UsuarioController {
     private Environment env;
 
     @GetMapping("/crash")
-    public void getMethodName() {
+    public void crash() {
         ((ConfigurableApplicationContext) context).close();
     }
     
@@ -74,6 +78,7 @@ public class UsuarioController {
                             .singletonMap("mensaje", "Ya existe un usuario con ese correo electrónico."));
         }
 
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.guardar(usuario));
     }
 
@@ -95,7 +100,7 @@ public class UsuarioController {
             }
             usuarioEncontrado.setNombre(usuario.getNombre());
             usuarioEncontrado.setEmail(usuario.getEmail());
-            usuarioEncontrado.setPassword(usuario.getPassword());
+            usuarioEncontrado.setPassword(passwordEncoder.encode(usuario.getPassword()));
             return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.guardar(usuarioEncontrado));
         }
         return ResponseEntity.notFound().build();
@@ -116,6 +121,20 @@ public class UsuarioController {
         return ResponseEntity.ok().body(usuarioService.listarPorIds(ids));
     }
 
+    @GetMapping("/authorized")
+    public Map<String, Object> authorized(@RequestParam String code) {
+        return Collections.singletonMap("code", code);
+    }
+
+    @GetMapping("/login")
+    public ResponseEntity<?> loginByEmail(@RequestParam String email) {
+        Optional<Usuario> optUsuario = usuarioService.porEmail(email);
+        if (optUsuario.isPresent()) {
+            return ResponseEntity.ok(optUsuario.get());
+        }
+        return ResponseEntity.notFound().build();
+    }
+    
     private ResponseEntity<?> validar(BindingResult result) {
         Map<String, String> errores = new HashMap<>();
         result.getFieldErrors().forEach(err -> {
